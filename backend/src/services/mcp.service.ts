@@ -140,7 +140,8 @@ const COMPONENT_MAP: Record<ErrorType, string[]> = {
 };
 
 class MCPService {
-  private bytezClient: Bytez | null = null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private bytezClient: any = null;
   private initialized = false;
   private useRealAI = false;
 
