@@ -108,14 +108,15 @@ router.get('/timeline/:range', async (req: Request, res: Response) => {
   try {
     const { range } = req.params;
     const validRanges = ['1h', '24h', '7d', '30d'];
+    const rangeStr = String(range);
 
-    if (!validRanges.includes(range)) {
+    if (!validRanges.includes(rangeStr)) {
       return res.status(400).json({ 
         error: 'Invalid range. Use: 1h, 24h, 7d, or 30d' 
       });
     }
 
-    const timelineData = await errorService.getTimeline(range);
+    const timelineData = await errorService.getTimeline(rangeStr);
     res.json(timelineData);
   } catch (error) {
     console.error('Error fetching timeline:', error);
@@ -132,8 +133,8 @@ router.get('/similar/:message', async (req: Request, res: Response) => {
     const { limit = '5' } = req.query;
 
     const similar = await errorService.getSimilarErrors(
-      decodeURIComponent(message),
-      parseInt(limit as string)
+      decodeURIComponent(String(message)),
+      parseInt(String(limit))
     );
 
     res.json({ errors: similar });
@@ -149,7 +150,7 @@ router.get('/similar/:message', async (req: Request, res: Response) => {
 router.get('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const error = await errorService.getErrorById(id);
+    const error = await errorService.getErrorById(String(id));
 
     if (!error) {
       return res.status(404).json({ error: 'Error not found' });
@@ -177,7 +178,7 @@ router.patch('/:id/status', async (req: Request, res: Response) => {
       });
     }
 
-    const updatedError = await errorService.updateErrorStatus(id, status);
+    const updatedError = await errorService.updateErrorStatus(String(id), status);
 
     if (!updatedError) {
       return res.status(404).json({ error: 'Error not found' });

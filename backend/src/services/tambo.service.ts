@@ -3,7 +3,7 @@
  * Provides AI-powered error analysis and component rendering
  */
 
-import Anthropic from '@anthropic-ai/sdk';
+import Bytez from 'bytez.js';
 
 // Types for Tambo service
 export interface ErrorAnalysisRequest {
@@ -54,23 +54,24 @@ export interface ComponentRenderResponse {
 }
 
 class TamboService {
-  private anthropic: Anthropic | null = null;
+  private bytezClient: Bytez | null = null;
   private initialized = false;
+  private useRealAI = false;
 
   constructor() {
     this.initialize();
   }
 
   private initialize() {
-    const apiKey = process.env.ANTHROPIC_API_KEY || process.env.OPENAI_API_KEY;
+    const apiKey = process.env.BYTEZ_API_KEY;
     
-    if (apiKey) {
-      // For now, we'll use a direct approach with structured responses
-      // When @tambo-ai/typescript-sdk is properly configured, replace this
+    if (apiKey && apiKey !== 'your_bytez_api_key_here') {
+      this.bytezClient = new Bytez(apiKey);
+      this.useRealAI = true;
       this.initialized = true;
-      console.log('✅ TamboService initialized (AI-powered analysis ready)');
+      console.log('✅ TamboService initialized (Bytez AI with Claude Sonnet 4.5)');
     } else {
-      console.warn('⚠️ No AI API key found - using simulated responses');
+      console.warn('⚠️ No Bytez API key found - using simulated responses');
       this.initialized = false;
     }
   }
@@ -81,11 +82,85 @@ class TamboService {
   async analyzeError(request: ErrorAnalysisRequest): Promise<ErrorAnalysisResponse> {
     console.log('🔍 Analyzing error:', request.errorMessage);
 
-    // Simulate AI analysis with realistic data
-    // In production, this would call the Tambo AI API
-    const analysis = await this.generateErrorAnalysis(request);
+    if (this.useRealAI && this.bytezClient) {
+      try {
+        return await this.generateAIAnalysis(request);
+      } catch (error) {
+        console.error('AI analysis failed, falling back to mock:', error);
+        return this.generateErrorAnalysis(request);
+      }
+    }
     
-    return analysis;
+    return this.generateErrorAnalysis(request);
+  }
+
+  /**
+   * Generate AI-powered analysis using Bytez SDK with Claude Sonnet 4.5
+   */
+  private async generateAIAnalysis(request: ErrorAnalysisRequest): Promise<ErrorAnalysisResponse> {
+    if (!this.bytezClient) {
+      throw new Error('Bytez client not initialized');
+    }
+
+    const model = this.bytezClient.model('anthropic/claude-sonnet-4-5');
+
+    const prompt = `You are an expert software engineer analyzing production errors.
+Analyze this error and provide a comprehensive analysis.
+
+Error Message: ${request.errorMessage}
+${request.stackTrace ? `Stack Trace:\n${request.stackTrace}` : ''}
+${request.context?.file ? `File: ${request.context.file}` : ''}
+${request.context?.line ? `Line: ${request.context.line}` : ''}
+${request.context?.environment ? `Environment: ${request.context.environment}` : ''}
+
+Respond with ONLY valid JSON in this exact format:
+{
+  "rootCause": "Brief description of the root cause",
+  "explanation": "Detailed explanation for developers",
+  "suggestedFix": {
+    "code": "Code snippet showing the fix",
+    "description": "Description of what the fix does",
+    "confidence": 85
+  },
+  "similarPatterns": ["Pattern 1", "Pattern 2"],
+  "preventionTips": ["Tip 1", "Tip 2", "Tip 3"],
+  "severity": "low|medium|high|critical",
+  "estimatedImpact": {
+    "users": 50,
+    "revenue": 5000
+  }
+}`;
+
+    const { error, output } = await model.run([
+      { role: 'user', content: prompt }
+    ]);
+
+    if (error) {
+      console.error('Bytez API error:', error);
+      throw new Error(String(error));
+    }
+
+    if (output) {
+      const jsonMatch = String(output).match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        return {
+          rootCause: parsed.rootCause || 'Unable to determine',
+          explanation: parsed.explanation || 'Further investigation required',
+          suggestedFix: parsed.suggestedFix || {
+            code: '// Add error handling',
+            description: 'Add proper error handling',
+            confidence: 50
+          },
+          similarPatterns: parsed.similarPatterns || [],
+          preventionTips: parsed.preventionTips || [],
+          severity: parsed.severity || 'medium',
+          estimatedImpact: parsed.estimatedImpact || { users: 0, revenue: 0 }
+        };
+      }
+    }
+
+    throw new Error('Failed to parse AI response');
   }
 
   /**

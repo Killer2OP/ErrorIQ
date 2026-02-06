@@ -279,7 +279,7 @@ class MCPService {
       const prompt = this.buildAnalysisPrompt(context, errorType);
       
       // Use Bytez SDK with Claude model
-      const model = this.bytezClient.model('anthropic/claude-opus-4-1');
+      const model = this.bytezClient.model('anthropic/claude-sonnet-4-5');
       
       const { error, output } = await model.run([
         {
