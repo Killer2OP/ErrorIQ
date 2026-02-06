@@ -15,7 +15,7 @@ import { useErrors } from '../hooks/useErrors';
 import { AlertTriangle, Clock, Users, ShoppingCart, RefreshCw, Loader2 } from 'lucide-react';
 
 export function DashboardPage() {
-  const { errors, loading, error: fetchError, refetch } = useErrors({ limit: 10 });
+  const { errors, loading, error: fetchError, refetch, isUsingMockData } = useErrors({ limit: 10 });
   
   // Get the most recent/critical error to display
   const currentError = errors[0] || null;
@@ -36,7 +36,7 @@ export function DashboardPage() {
 
   return (
     <div className="min-h-full">
-      <DemoModeBanner />
+      <DemoModeBanner isUsingMockData={isUsingMockData} />
 
       <div className="p-8">
         {/* Page Header */}
