@@ -13,10 +13,9 @@ import {
 } from '../components/dashboard';
 import { useErrors } from '../hooks/useErrors';
 import { AlertTriangle, Clock, Users, ShoppingCart, RefreshCw, Loader2 } from 'lucide-react';
-import { formatCurrency } from '../lib/utils';
 
 export function DashboardPage() {
-  const { errors, loading, error: fetchError, stats, refetch } = useErrors({ limit: 10 });
+  const { errors, loading, error: fetchError, refetch } = useErrors({ limit: 10 });
   
   // Get the most recent/critical error to display
   const currentError = errors[0] || null;
