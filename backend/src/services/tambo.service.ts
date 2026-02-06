@@ -3,7 +3,10 @@
  * Provides AI-powered error analysis and component rendering
  */
 
-import Bytez from 'bytez.js';
+import BytezModule from 'bytez.js';
+
+// Handle ESM/CJS module resolution differences
+const Bytez = (BytezModule as any).default || BytezModule;
 
 // Types for Tambo service
 export interface ErrorAnalysisRequest {

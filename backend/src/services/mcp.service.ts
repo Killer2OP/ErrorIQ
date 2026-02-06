@@ -3,7 +3,10 @@
  * Uses Bytez SDK for multi-model access with smart mock fallbacks
  */
 
-import Bytez from 'bytez.js';
+import BytezModule from 'bytez.js';
+
+// Handle ESM/CJS module resolution differences
+const Bytez = (BytezModule as any).default || BytezModule;
 
 // Types for MCP service
 export type ErrorType = 
